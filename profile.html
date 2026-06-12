@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Profil | RHN Preloved</title>
+  <link rel="stylesheet" href="styles.css"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <style>
+    .profile-tab{flex:1;padding:.6rem .4rem;border-radius:var(--r-sm);font-size:.8rem;font-weight:600;color:var(--ink-faint);background:none;border:none;cursor:pointer;transition:all var(--t);font-family:'Sora',sans-serif;white-space:nowrap}
+    .profile-tab.active{background:var(--bg-card);color:var(--ink);box-shadow:var(--shadow-sm)}
+    @media(max-width:768px){#profile-layout{grid-template-columns:1fr!important}}
+  </style>
+</head>
+<body>
+<div id="nav-root"></div>
+<div class="page-hero">
+  <div class="container">
+    <div class="page-hero-inner">
+      <div><p class="eyebrow">Akun Saya</p><h1 id="profile-headline">Profil</h1>
+        <p>Kelola akun, riwayat pesanan, dan ulasan Anda.</p></div>
+      <div class="chip-row" id="role-chip"></div>
+    </div>
+  </div>
+</div>
+
+<main class="container page-body">
+  <div style="display:grid;grid-template-columns:300px 1fr;gap:1.75rem;align-items:start" id="profile-layout">
+
+    <!-- Left card -->
+    <div style="display:flex;flex-direction:column;gap:1rem">
+      <div class="card" style="text-align:center">
+        <div id="profile-avatar" style="width:72px;height:72px;border-radius:50%;background:var(--accent);color:#fff;font-size:1.8rem;font-weight:800;display:grid;place-items:center;margin:0 auto .85rem"></div>
+        <div id="profile-name" style="font-weight:700;font-size:1.1rem;margin-bottom:.25rem"></div>
+        <div id="profile-username" style="font-size:.8rem;color:var(--ink-faint);margin-bottom:.25rem"></div>
+        <div id="profile-email" style="font-size:.83rem;color:var(--ink-mid);margin-bottom:.25rem"></div>
+        <div id="profile-phone" style="font-size:.83rem;color:var(--ink-mid);margin-bottom:.5rem"></div>
+
+        <!-- Warning if phone empty -->
+        <div id="phone-warning" style="display:none;background:var(--yellow-lo);border:1px solid rgba(234,179,8,.25);border-radius:var(--r-md);padding:.65rem .85rem;font-size:.78rem;color:#fde68a;margin-bottom:.75rem;text-align:left;line-height:1.5">
+          ⚠️ <strong>Nomor WA belum diisi!</strong><br>Isi nomor agar pembeli & penjual bisa menghubungimu via WhatsApp.
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:.5rem">
+          <button class="btn-primary btn-full" id="edit-profile-btn"><i class="fa-solid fa-pen-to-square"></i> Edit Profil & Nomor WA</button>
+          <a href="seller.html" class="btn-outline btn-full"><i class="fa-solid fa-store"></i> Dashboard Penjual</a>
+          <button class="btn-danger btn-full" id="logout-btn"><i class="fa-solid fa-right-from-bracket"></i> Keluar</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3 style="font-size:.78rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--ink-faint);margin-bottom:.85rem">Statistik</h3>
+        <div id="profile-stats"></div>
+      </div>
+    </div>
+
+    <!-- Right tabs -->
+    <div style="display:flex;flex-direction:column;gap:1rem">
+      <div style="display:flex;gap:.3rem;background:var(--bg-input);padding:.3rem;border-radius:var(--r-md);border:1px solid var(--border)">
+        <button class="profile-tab active" id="tab-orders"><i class="fa-solid fa-bag-shopping"></i> Pesanan</button>
+        <button class="profile-tab" id="tab-given"><i class="fa-solid fa-pen"></i> Ulasan Dibuat</button>
+        <button class="profile-tab" id="tab-received"><i class="fa-solid fa-star"></i> Ulasan Diterima</button>
+      </div>
+      <div id="panel-orders"><div id="ordersList" class="orders-list"></div></div>
+      <div id="panel-given" class="hidden">
+        <div class="card" style="margin-bottom:.5rem;padding:.85rem 1rem;background:var(--blue-lo);border-color:rgba(59,130,246,.2)">
+          <p style="font-size:.83rem;color:#0b0f14">✍️ <strong>Ulasan yang kamu tulis</strong> untuk produk yang sudah kamu beli.</p>
+        </div>
+        <div id="givenList"></div>
+      </div>
+      <div id="panel-received" class="hidden">
+        <div class="card" style="margin-bottom:.5rem;padding:.85rem 1rem;background:var(--yellow-lo);border-color:rgba(234,179,8,.2)">
+          <p style="font-size:.83rem;color:#0b0f14">⭐ <strong>Ulasan dari pembeli</strong> untuk produk-produkmu.</p>
+        </div>
+        <div id="receivedList"></div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- EDIT PROFILE MODAL -->
+<div class="modal-overlay" id="editModal">
+  <div class="modal" style="max-width:480px">
+    <div class="modal-header">
+      <h2>✏️ Edit Profil</h2>
+      <button class="modal-close" id="closeEditModal">✕</button>
+    </div>
+    <div class="modal-body" style="gap:.85rem">
+      <div class="form-group">
+        <label class="form-label">Nama Lengkap</label>
+        <input type="text" id="edit-name" placeholder="Nama lengkap"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Username</label>
+        <input type="text" id="edit-username" placeholder="username (tanpa @)"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Nomor WhatsApp *</label>
+        <input type="tel" id="edit-phone" placeholder="contoh: 08123456789"/>
+        <span class="form-hint">Nomor ini yang akan dihubungi pembeli/penjual via WhatsApp</span>
+      </div>
+      <div style="background:var(--blue-lo);border:1px solid rgba(59,130,246,.2);border-radius:var(--r-md);padding:.75rem 1rem;font-size:.82rem;color:#93c5fd">
+        📧 Email tidak bisa diubah: <strong id="edit-email-display"></strong>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-ghost" id="cancelEditModal">Batal</button>
+      <button class="btn-primary" id="saveEditProfile">💾 Simpan Perubahan</button>
+    </div>
+  </div>
+</div>
+
+<footer class="footer">© 2026 RHN Preloved</footer>
+
+<script type="module">
+import {
+  requireAuth, renderNav, getUserProfile, formatRp, waNumber,
+  auth, db, signOut,
+  collection, doc, setDoc, updateDoc, getDocs, addDoc, query, where, serverTimestamp
+} from './app.js';
+
+const user    = await requireAuth();
+const profile = await getUserProfile(user.uid);
+renderNav(profile);
+
+// Safe profile fields
+let name     = profile?.name     || 'Pengguna';
+let username = profile?.username || user.uid.slice(0,8);
+let email    = profile?.email    || user.email || '';
+let phone    = profile?.phone    || '';
+
+function fillProfileCard() {
+  document.getElementById('profile-avatar').textContent   = name.charAt(0).toUpperCase();
+  document.getElementById('profile-headline').textContent = name.split(' ')[0];
+  document.getElementById('profile-name').textContent     = name;
+  document.getElementById('profile-username').textContent = '@' + username;
+  document.getElementById('profile-email').textContent    = email;
+  document.getElementById('profile-phone').textContent    = phone ? '📱 ' + phone : '📱 Nomor WA belum diisi';
+  document.getElementById('profile-phone').style.color    = phone ? '' : 'var(--yellow)';
+
+  // Show warning if phone empty
+  document.getElementById('phone-warning').style.display = phone ? 'none' : 'block';
+
+  const chip = document.getElementById('role-chip');
+  if (chip) chip.innerHTML = `<span class="chip">👤 ${name}</span><span class="chip">@${username}</span>`;
+}
+fillProfileCard();
+
+// ── EDIT PROFILE MODAL ─────────────────────────────────
+const editModal = document.getElementById('editModal');
+const openEdit  = () => {
+  document.getElementById('edit-name').value     = name;
+  document.getElementById('edit-username').value = username;
+  document.getElementById('edit-phone').value    = phone;
+  document.getElementById('edit-email-display').textContent = email;
+  editModal.classList.add('open');
+  document.body.classList.add('no-scroll');
+};
+const closeEdit = () => {
+  editModal.classList.remove('open');
+  document.body.classList.remove('no-scroll');
+};
+
+document.getElementById('edit-profile-btn').addEventListener('click', openEdit);
+document.getElementById('closeEditModal').addEventListener('click', closeEdit);
+document.getElementById('cancelEditModal').addEventListener('click', closeEdit);
+editModal.addEventListener('click', e => { if (e.target === editModal) closeEdit(); });
+
+document.getElementById('saveEditProfile').addEventListener('click', async () => {
+  const newName     = document.getElementById('edit-name').value.trim();
+  const newUsername = document.getElementById('edit-username').value.trim().replace(/^@/,'').replace(/[^a-z0-9_]/gi,'');
+  const newPhone    = document.getElementById('edit-phone').value.trim();
+
+  if (!newName)     { alert('Nama tidak boleh kosong.'); return; }
+  if (!newPhone)    { alert('Nomor WhatsApp tidak boleh kosong.'); return; }
+
+  const btn = document.getElementById('saveEditProfile');
+  btn.disabled = true; btn.textContent = '⏳ Menyimpan…';
+
+  try {
+    await setDoc(doc(db,'users',user.uid), {
+      name: newName,
+      username: newUsername || username,
+      email,
+      phone: newPhone,
+      createdAt: serverTimestamp()
+    });
+
+    // Also update phone on all user's products so WA links work
+    const prodSnap = await getDocs(query(collection(db,'products'), where('sellerId','==',user.uid)));
+    const updates  = prodSnap.docs.map(d => updateDoc(doc(db,'products',d.id), {
+      phone: newPhone, whatsapp: newPhone,
+      sellerName: newName
+    }));
+    await Promise.all(updates);
+
+    // Update local vars
+    name     = newName;
+    username = newUsername || username;
+    phone    = newPhone;
+
+    fillProfileCard();
+    closeEdit();
+
+    // Show success toast
+    const c = document.getElementById('toast-container') || (() => { const el=document.createElement('div'); el.id='toast-container'; document.body.appendChild(el); return el; })();
+    const t = document.createElement('div'); t.className='toast success';
+    t.textContent = '✓ Profil berhasil diperbarui!'; c.appendChild(t);
+    setTimeout(()=>{ t.classList.add('out'); t.addEventListener('animationend',()=>t.remove()); }, 3000);
+
+  } catch(e) {
+    alert('Gagal menyimpan: ' + e.message);
+  } finally {
+    btn.disabled=false; btn.textContent='💾 Simpan Perubahan';
+  }
+});
+
+// ── LOGOUT ─────────────────────────────────────────────
+document.getElementById('logout-btn').addEventListener('click', async () => {
+  await signOut(auth);
+  window.location.href = 'index.html';
+});
+
+// ── TABS ───────────────────────────────────────────────
+const tabIds   = ['orders','given','received'];
+const panelIds = ['panel-orders','panel-given','panel-received'];
+tabIds.forEach((t,i) => {
+  document.getElementById('tab-'+t).addEventListener('click', () => {
+    tabIds.forEach((_,j) => {
+      document.getElementById('tab-'+tabIds[j]).classList.toggle('active', i===j);
+      document.getElementById(panelIds[j]).classList.toggle('hidden', i!==j);
+    });
+  });
+});
+
+// ── STATS ──────────────────────────────────────────────
+async function loadStats() {
+  const [myProds, myOrders, givenRevs] = await Promise.all([
+    getDocs(query(collection(db,'products'), where('sellerId','==',user.uid))),
+    getDocs(query(collection(db,'orders'),   where('buyerId','==',user.uid))),
+    getDocs(query(collection(db,'reviews'),  where('buyerId','==',user.uid))),
+  ]);
+  const myIds = myProds.docs.map(d=>d.id);
+  let rcvdCount = 0;
+  if (myIds.length) {
+    // Firestore 'in' max 10
+    for (let i=0; i<myIds.length; i+=10) {
+      const batch = myIds.slice(i,i+10);
+      const s = await getDocs(query(collection(db,'reviews'), where('productId','in',batch)));
+      rcvdCount += s.size;
+    }
+  }
+  document.getElementById('profile-stats').innerHTML = [
+    ['📦', myProds.size,  'Produk Dijual'],
+    ['🛒', myOrders.size, 'Pesanan'],
+    ['✍️',  givenRevs.size,'Ulasan Diberikan'],
+    ['⭐', rcvdCount,     'Ulasan Diterima'],
+  ].map(([icon,val,label])=>`
+    <div style="display:flex;justify-content:space-between;align-items:center;font-size:.85rem;padding:.35rem 0;border-bottom:1px solid var(--border)">
+      <span style="color:var(--ink-mid)">${icon} ${label}</span>
+      <span style="font-weight:700">${val}</span>
+    </div>`).join('');
+}
+
+// ── ORDERS ─────────────────────────────────────────────
+async function loadOrders() {
+  const el = document.getElementById('ordersList');
+  const snap = await getDocs(query(collection(db,'orders'), where('buyerId','==',user.uid)));
+  const orders = snap.docs.map(d=>({id:d.id,...d.data()}))
+    .sort((a,b)=>(b.createdAt?.toDate?.()?.getTime()||0)-(a.createdAt?.toDate?.()?.getTime()||0));
+
+  if (!orders.length) {
+    el.innerHTML = `<div class="empty-state" style="padding:2rem"><div class="empty-icon">🛒</div><h3>Belum ada pesanan</h3><p>Mulai belanja!</p><a href="home.html" class="btn-primary" style="margin-top:1rem;display:inline-flex">Ke Marketplace</a></div>`;
+    return;
+  }
+
+  // Build seller phone cache for old orders that didn't save sellerPhone
+  const sellerPhoneCache = {};
+  const sellerIds = [...new Set(orders.flatMap(o => (o.items||[]).map(i => i.sellerId).filter(Boolean)))];
+  if (sellerIds.length) {
+    for (let i=0; i<sellerIds.length; i+=10) {
+      const batch = sellerIds.slice(i,i+10);
+      try {
+        const sSnap = await getDocs(query(collection(db,'users'), where('__name__','in',batch)));
+        sSnap.docs.forEach(d => { sellerPhoneCache[d.id] = d.data().phone || ''; });
+      } catch {}
+    }
+  }
+
+  const statusLabel = {
+    pending:  '⏳ Menunggu Penjual',
+    accepted: '✅ Diterima Penjual',
+    done:     '🎉 Selesai',
+    rejected: '✕ Ditolak'
+  };
+
+  el.innerHTML = orders.map(o => `
+    <div class="order-card" id="oc-${o.id}">
+      <div class="order-header">
+        <div>
+          <div class="order-id">#${o.id.slice(-8).toUpperCase()}</div>
+          <div style="font-size:.78rem;color:var(--ink-faint);margin-top:.2rem">
+            ${o.createdAt?.toDate?.()?.toLocaleDateString('id-ID',{day:'numeric',month:'long',year:'numeric'})||''}
+          </div>
+        </div>
+        <span class="order-status ${o.status}">${statusLabel[o.status]||o.status}</span>
+      </div>
+      <div class="order-items">${(o.items||[]).map(i=>i.name).join(', ')}</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.5rem">
+        <span class="order-total">${formatRp(o.total)}</span>
+        <span class="faint">${o.payment}</span>
+      </div>
+
+      ${(o.status==='pending'||o.status==='accepted') ? `
+        <div style="display:flex;gap:.5rem;margin-top:.85rem;flex-wrap:wrap;align-items:center">
+          ${o.status==='pending'
+            ? `<span class="badge" style="background:var(--yellow-lo);color:var(--yellow)">⏳ Menunggu penjual merespons</span>` : ''}
+          ${(o.items||[]).map(item => {
+              // sellerPhone from order item, or fallback from sellerPhoneCache
+              const sellerPhone = item.sellerPhone || sellerPhoneCache[item.sellerId] || '';
+              const waText = encodeURIComponent('Halo, saya sudah checkout produk "'+item.name+'". Kapan bisa COD?');
+              return sellerPhone
+                ? `<a href="https://wa.me/${waNumber(sellerPhone)}?text=${waText}" target="_blank" class="btn-outline btn-sm">💬 WA: ${item.sellerName}</a>`
+                : `<a href="home.html" class="btn-outline btn-sm" style="opacity:.6">💬 ${item.sellerName} (hubungi via profil)</a>`;
+            }).join('')}
+          ${o.status==='accepted'
+            ? `<button class="btn-primary btn-sm" onclick="confirmDone('${o.id}')">✅ Konfirmasi Selesai</button>` : ''}
+        </div>` : ''}
+
+      ${o.status==='rejected' ? `
+        <div style="margin-top:.65rem;padding:.65rem .85rem;background:var(--red-lo);border-radius:var(--r-md);font-size:.82rem;color:var(--red)">
+          Pesanan ditolak penjual. Silakan cari produk lain atau hubungi penjual langsung.
+        </div>` : ''}
+
+      ${o.status==='done' && !o.reviewed ? `
+        <div class="review-box" id="rev-box-${o.id}">
+          <div style="font-size:.82rem;font-weight:600;margin-bottom:.35rem">⭐ Beri ulasan untuk transaksi ini</div>
+          <div class="star-row" id="stars-${o.id}">
+            ${[1,2,3,4,5].map(n=>`<button type="button" class="star-btn" onclick="setStar('${o.id}',${n})">☆</button>`).join('')}
+          </div>
+          <textarea id="rev-text-${o.id}" rows="2" placeholder="Bagaimana pengalaman transaksinya?"></textarea>
+          <button class="btn-primary btn-sm" onclick="submitReview('${o.id}','${o.items?.[0]?.id||''}','${o.items?.[0]?.sellerName||''}')">Kirim Ulasan</button>
+        </div>` : ''}
+
+      ${o.reviewed ? `<div class="faint" style="margin-top:.5rem;font-size:.78rem">✅ Ulasan sudah diberikan</div>` : ''}
+    </div>`).join('');
+}
+
+const stars = {};
+window.setStar = function(orderId, val) {
+  stars[orderId] = val;
+  document.querySelectorAll(`#stars-${orderId} .star-btn`).forEach((b,i) => {
+    b.textContent = i < val ? '⭐' : '☆';
+  });
+};
+
+window.confirmDone = async function(orderId) {
+  if (!confirm('Konfirmasi transaksi sudah selesai?\nProduk akan otomatis ditandai terjual.')) return;
+  try {
+    // Get order items then mark products sold
+    const allOrders = await getDocs(query(collection(db,'orders')));
+    const order = allOrders.docs.find(d=>d.id===orderId)?.data();
+    if (order) {
+      for (const item of (order.items||[])) {
+        try { await updateDoc(doc(db,'products',item.id), { sold:true }); } catch {}
+      }
+    }
+    await updateDoc(doc(db,'orders',orderId), { status:'done' });
+    const toastC = document.getElementById('toast-container') || (() => { const el=document.createElement('div'); el.id='toast-container'; document.body.appendChild(el); return el; })();
+    const t = document.createElement('div'); t.className='toast success';
+    t.textContent='✅ Transaksi selesai! Produk ditandai terjual.'; toastC.appendChild(t);
+    setTimeout(()=>{ t.classList.add('out'); t.addEventListener('animationend',()=>t.remove()); },3000);
+    await loadOrders();
+  } catch(e) { alert('Gagal: '+e.message); }
+};
+
+window.submitReview = async function(orderId, productId, sellerName) {
+  const rating = stars[orderId];
+  const text   = document.getElementById(`rev-text-${orderId}`)?.value.trim();
+  if (!rating) { alert('Pilih rating bintang.'); return; }
+  if (!text)   { alert('Tulis ulasan terlebih dahulu.'); return; }
+  try {
+    await addDoc(collection(db,'reviews'), {
+      productId, orderId,
+      buyerId: user.uid, buyerName: name,
+      sellerName, rating, text,
+      createdAt: serverTimestamp()
+    });
+    await updateDoc(doc(db,'orders',orderId), { reviewed:true });
+    // Update avgRating on product
+    try {
+      const rSnap = await getDocs(query(collection(db,'reviews'), where('productId','==',productId)));
+      const rs = rSnap.docs.map(d=>d.data());
+      const avg = rs.reduce((s,r)=>s+r.rating,0)/rs.length;
+      await updateDoc(doc(db,'products',productId), { avgRating: avg });
+    } catch {}
+    const toastC = document.getElementById('toast-container') || (() => { const el=document.createElement('div'); el.id='toast-container'; document.body.appendChild(el); return el; })();
+    const t = document.createElement('div'); t.className='toast success';
+    t.textContent='⭐ Ulasan berhasil dikirim!'; toastC.appendChild(t);
+    setTimeout(()=>{ t.classList.add('out'); t.addEventListener('animationend',()=>t.remove()); },3000);
+    await loadOrders();
+  } catch(e) { alert('Gagal: '+e.message); }
+};
+
+// ── REVIEWS GIVEN ──────────────────────────────────────
+async function loadGivenReviews() {
+  const el   = document.getElementById('givenList');
+  const snap = await getDocs(query(collection(db,'reviews'), where('buyerId','==',user.uid)));
+  const rs   = snap.docs.map(d=>({id:d.id,...d.data()}));
+
+  if (!rs.length) {
+    el.innerHTML = `<div class="empty-state" style="padding:2rem"><div class="empty-icon">✍️</div><h3>Belum ada ulasan</h3><p>Ulasan muncul setelah transaksi dikonfirmasi selesai.</p></div>`;
+    return;
+  }
+
+  // Fetch product names in batch
+  const prodIds = [...new Set(rs.map(r=>r.productId))];
+  const prodMap = {};
+  for (let i=0; i<prodIds.length; i+=10) {
+    const batch = prodIds.slice(i,i+10);
+    const s = await getDocs(query(collection(db,'products'), where('__name__','in',batch)));
+    s.docs.forEach(d => prodMap[d.id] = d.data().name);
+  }
+
+  el.innerHTML = rs.map(r => `
+    <div class="review-card">
+      <div style="font-size:.78rem;color:var(--ink-faint);margin-bottom:.4rem">
+        Untuk: <strong style="color:var(--ink-mid)">${prodMap[r.productId]||r.productId}</strong>
+        · Penjual: ${r.sellerName||'-'}
+      </div>
+      <div class="review-header">
+        <div class="review-stars">${'⭐'.repeat(r.rating)}${'☆'.repeat(5-r.rating)}</div>
+        <span class="review-author">${r.createdAt?.toDate?.()?.toLocaleDateString('id-ID',{day:'numeric',month:'short',year:'numeric'})||''}</span>
+      </div>
+      <p class="review-text" style="margin-top:.4rem">${r.text}</p>
+    </div>`).join('');
+}
+
+// ── REVIEWS RECEIVED ───────────────────────────────────
+async function loadReceivedReviews() {
+  const el      = document.getElementById('receivedList');
+  const myProds = await getDocs(query(collection(db,'products'), where('sellerId','==',user.uid)));
+  const myIds   = myProds.docs.map(d=>d.id);
+
+  if (!myIds.length) {
+    el.innerHTML = `<div class="empty-state" style="padding:2rem"><div class="empty-icon">⭐</div><h3>Belum ada produk</h3><p>Upload produk dulu untuk mendapat ulasan.</p></div>`;
+    return;
+  }
+
+  let allRevs = [];
+  for (let i=0; i<myIds.length; i+=10) {
+    const batch = myIds.slice(i,i+10);
+    const s = await getDocs(query(collection(db,'reviews'), where('productId','in',batch)));
+    allRevs = allRevs.concat(s.docs.map(d=>({id:d.id,...d.data()})));
+  }
+
+  if (!allRevs.length) {
+    el.innerHTML = `<div class="empty-state" style="padding:2rem"><div class="empty-icon">⭐</div><h3>Belum ada ulasan</h3><p>Ulasan dari pembeli akan muncul di sini.</p></div>`;
+    return;
+  }
+
+  // Group by product
+  const byProd = {};
+  allRevs.forEach(r => { if (!byProd[r.productId]) byProd[r.productId]=[]; byProd[r.productId].push(r); });
+  const prodNameMap = {};
+  myProds.docs.forEach(d => prodNameMap[d.id] = d.data().name);
+
+  el.innerHTML = Object.entries(byProd).map(([pid, rs]) => {
+    const avg = (rs.reduce((s,r)=>s+r.rating,0)/rs.length).toFixed(1);
+    return `
+      <div style="margin-bottom:1.25rem">
+        <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.65rem;padding-bottom:.65rem;border-bottom:1px solid var(--border)">
+          <div style="font-weight:700;font-size:.92rem">${prodNameMap[pid]||pid}</div>
+          <span style="font-size:.75rem;color:var(--yellow)">⭐ ${avg} · ${rs.length} ulasan</span>
+        </div>
+        ${rs.map(r=>`
+          <div class="review-card" style="margin-bottom:.5rem">
+            <div class="review-header">
+              <div style="display:flex;align-items:center;gap:.5rem">
+                <span style="width:26px;height:26px;border-radius:50%;background:var(--accent);color:#fff;font-size:.7rem;font-weight:700;display:grid;place-items:center;flex-shrink:0">${(r.buyerName||'?').charAt(0).toUpperCase()}</span>
+                <div>
+                  <span style="font-weight:600;font-size:.85rem">${r.buyerName}</span>
+                  <div class="review-stars" style="font-size:.8rem">${'⭐'.repeat(r.rating)}${'☆'.repeat(5-r.rating)}</div>
+                </div>
+              </div>
+              <span class="review-author">${r.createdAt?.toDate?.()?.toLocaleDateString('id-ID',{day:'numeric',month:'short',year:'numeric'})||''}</span>
+            </div>
+            <p class="review-text" style="margin-top:.35rem">${r.text}</p>
+          </div>`).join('')}
+      </div>`;
+  }).join('');
+}
+
+// Load all
+await Promise.all([loadStats(), loadOrders(), loadGivenReviews(), loadReceivedReviews()]);
+
+</script>
+</body>
+</html>

@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Marketplace | RHN Preloved</title>
+  <link rel="stylesheet" href="styles.css"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+</head>
+<body>
+<div id="nav-root"></div>
+
+<div class="page-hero">
+  <div class="container">
+    <div class="page-hero-inner">
+      <div>
+        <p class="eyebrow">Marketplace</p>
+        <h1>Temukan Barang Bekas Berkualitas</h1>
+        <p>Barang preloved dari sesama mahasiswa rantau Yogyakarta.</p>
+      </div>
+      <div class="chip-row" id="role-chip"></div>
+    </div>
+  </div>
+</div>
+
+<main class="container page-body">
+  <div class="filters-bar">
+    <h3 style="font-size:.9rem;font-weight:700;color:var(--ink-mid);margin-bottom:.85rem"><i class="fa-solid fa-sliders"></i> Filter Produk</h3>
+    <div class="filter-grid">
+      <div class="form-group">
+        <label class="form-label">Cari</label>
+        <input type="search" id="searchInput" placeholder="Nama produk atau penjual…"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Kategori</label>
+        <select id="categoryFilter"><option value="All">Semua Kategori</option></select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Rentang Harga</label>
+        <select id="priceFilter">
+          <option value="All">Semua Harga</option>
+          <option value="low">Di bawah Rp 100.000</option>
+          <option value="mid">Rp 100.000 – 500.000</option>
+          <option value="high">Di atas Rp 500.000</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Kondisi</label>
+        <select id="conditionFilter">
+          <option value="All">Semua Kondisi</option>
+          <option value="Sangat Baik">Sangat Baik</option>
+          <option value="Baik">Baik</option>
+          <option value="Layak Pakai">Layak Pakai</option>
+        </select>
+      </div>
+    </div>
+    <div class="filter-footer">
+      <span class="results-count" id="resultsLabel">Memuat…</span>
+      <button class="reset-btn" id="resetFilters"><i class="fa-solid fa-rotate-left"></i> Reset</button>
+    </div>
+  </div>
+
+  <div class="section-row" style="margin-top:20px">
+    <h2 style="font-size:1.1rem"><i class="fa-solid fa-boxes-stacked" style="color:var(--accent)"></i> Semua Produk</h2>
+  </div>
+  <div id="productGrid" class="product-grid">
+    <div class="empty-state"><div class="empty-icon">⏳</div><p>Memuat produk…</p></div>
+  </div>
+</main>
+
+<footer class="footer">© 2026 RHN Preloved · Platform mahasiswa rantau Yogyakarta</footer>
+
+<script type="module">
+import {
+  requireAuth, renderNav, getUserProfile,
+  getLocalCart, setLocalCart, updateCartBadge,
+  formatRp, toast,
+  auth, db, collection, query, onSnapshot
+} from './app.js';
+
+const user    = await requireAuth();
+const profile = await getUserProfile(user.uid);
+renderNav(profile);
+
+const grid     = document.getElementById('productGrid');
+const searchEl = document.getElementById('searchInput');
+const catEl    = document.getElementById('categoryFilter');
+const priceEl  = document.getElementById('priceFilter');
+const condEl   = document.getElementById('conditionFilter');
+const labelEl  = document.getElementById('resultsLabel');
+
+let allProducts = [];
+
+// Simple query — no composite index needed
+// Filter active client-side, sort by createdAt, sold products shown at bottom with overlay
+onSnapshot(query(collection(db,'products')), snap => {
+  const all = snap.docs
+    .map(d => ({ id: d.id, ...d.data() }))
+    .filter(p => p.active)
+    .sort((a, b) => {
+      // Unsold first, then sold; within each group newest first
+      if (a.sold !== b.sold) return a.sold ? 1 : -1;
+      const ta = a.createdAt?.toDate?.()?.getTime() || 0;
+      const tb = b.createdAt?.toDate?.()?.getTime() || 0;
+      return tb - ta;
+    });
+  allProducts = all;
+
+  // Populate category filter
+  const cats = [...new Set(allProducts.map(p => p.category))].filter(Boolean);
+  const prev = catEl.value;
+  catEl.innerHTML = '<option value="All">Semua Kategori</option>' +
+    cats.map(c => `<option value="${c}">${c}</option>`).join('');
+  if (cats.includes(prev)) catEl.value = prev;
+
+  renderGrid();
+}, err => {
+  console.error('Firestore error:', err.message);
+  grid.innerHTML = `<div class="empty-state"><div class="empty-icon">⚠️</div><h3>Gagal memuat</h3><p>${err.message}</p></div>`;
+});
+
+function renderGrid() {
+  const term  = searchEl.value.toLowerCase();
+  const cat   = catEl.value;
+  const cond  = condEl.value;
+  const price = priceEl.value;
+
+  const filtered = allProducts.filter(p => {
+    const mt = p.name?.toLowerCase().includes(term) || p.sellerName?.toLowerCase().includes(term);
+    const mc = cat   === 'All' || p.category  === cat;
+    const mo = cond  === 'All' || p.condition === cond;
+    const mp = price === 'low'  ? p.price <= 100000 :
+               price === 'mid'  ? p.price > 100000 && p.price <= 500000 :
+               price === 'high' ? p.price > 500000 : true;
+    return mt && mc && mo && mp;
+  });
+
+  labelEl.textContent = `${filtered.length} produk`;
+
+  if (!filtered.length) {
+    grid.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-icon">${term||cat!=='All' ? '🔍' : '📦'}</div>
+        <h3>${term||cat!=='All' ? 'Tidak ditemukan' : 'Belum ada produk'}</h3>
+        <p>${term||cat!=='All' ? 'Coba ubah filter.' : 'Jadilah yang pertama berjualan!'}</p>
+        ${!term&&cat==='All'?`<a href="seller.html" class="btn-primary" style="margin-top:1rem;display:inline-flex">+ Jual Produk</a>`:''}
+      </div>`;
+    return;
+  }
+
+  const cart = getLocalCart();
+  grid.innerHTML = filtered.map((p, i) => {
+    const inCart  = cart.some(c => c.id === p.id);
+    const isSold  = !!p.sold;
+    const avgHtml = p.avgRating
+      ? `<span style="font-size:.72rem;color:var(--yellow)">⭐ ${Number(p.avgRating).toFixed(1)}</span>` : '';
+    return `
+      <article class="product-card" style="animation-delay:${i*.05}s;${isSold?'opacity:.65':''};"
+        onclick="location.href='product.html?id=${p.id}'">
+        <div class="thumb-wrap">
+          <img class="product-thumb"
+            src="${p.images?.[0]||'https://images.unsplash.com/photo-1472851294608-062f824d29cc?w=600&q=60'}"
+            alt="${p.name}" loading="lazy"/>
+          <div class="thumb-badge"><span class="badge badge-cat">${p.category}</span></div>
+          ${isSold ? `<div class="sold-overlay">TERJUAL</div>` : ''}
+        </div>
+        <div class="product-body">
+          <div class="product-name">${p.name}</div>
+          <div class="product-price">${formatRp(p.price)}${p.negotiable && !isSold
+            ? ' <span style="font-size:.65rem;color:var(--yellow);font-weight:600">· Nego</span>' : ''}</div>
+          <div style="display:flex;align-items:center;gap:.4rem;flex-wrap:wrap;margin-top:.15rem">
+            <span class="badge badge-cond" style="font-size:.65rem">${p.condition}</span>
+            ${isSold
+              ? '<span class="badge" style="background:var(--red-lo);color:var(--red);border:1px solid rgba(239,68,68,.2)">Terjual</span>'
+              : avgHtml}
+          </div>
+          <div class="product-seller">📍 ${p.location||'Yogyakarta'} · ${p.sellerName}</div>
+          <div class="product-footer" onclick="event.stopPropagation()">
+            <a class="btn-${isSold?'ghost':'primary'}" href="product.html?id=${p.id}"
+              style="font-size:.75rem;padding:.4rem .75rem">Lihat Detail</a>
+            ${!isSold ? `
+              <button class="btn-ghost btn-icon" id="cb-${p.id}"
+                onclick="handleCart('${p.id}')"
+                title="${inCart?'Sudah di keranjang':'Tambah ke keranjang'}"
+                style="${inCart?'color:var(--accent);border-color:var(--accent)':''}">
+                ${inCart?'🛒✓':'🛒'}
+              </button>` : ''}
+          </div>
+        </div>
+      </article>`;
+  }).join('');
+}
+
+window.handleCart = function(productId) {
+  const cart = getLocalCart();
+  if (cart.some(i => i.id === productId)) { toast('Sudah di keranjang.','info'); return; }
+  const p = allProducts.find(x => x.id === productId);
+  if (!p) return;
+  cart.push({ ...p, quantity: 1 });
+  setLocalCart(cart);
+  updateCartBadge();
+  toast(`✓ ${p.name} ditambahkan ke keranjang.`, 'success');
+  const btn = document.getElementById(`cb-${productId}`);
+  if (btn) { btn.textContent='🛒✓'; btn.style.color='var(--accent)'; btn.style.borderColor='var(--accent)'; }
+};
+
+[searchEl, catEl, priceEl, condEl].forEach(el =>
+  el?.addEventListener('input', renderGrid));
+document.getElementById('resetFilters')?.addEventListener('click', () => {
+  searchEl.value=''; catEl.value='All'; priceEl.value='All'; condEl.value='All';
+  renderGrid();
+});
+</script>
+</body>
+</html>

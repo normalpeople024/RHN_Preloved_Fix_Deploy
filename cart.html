@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Keranjang | RHN Preloved</title>
+  <link rel="stylesheet" href="styles.css"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+</head>
+<body>
+<div id="nav-root"></div>
+<div class="page-hero">
+  <div class="container">
+    <div class="page-hero-inner">
+      <div><p class="eyebrow"><i class="fa-solid fa-cart-shopping"></i> Keranjang & Checkout</p><h1>Konfirmasi Pesanan</h1><p>Periksa produk, pilih pembayaran, konfirmasi.</p></div>
+      <div class="chip-row" id="role-chip"></div>
+    </div>
+  </div>
+</div>
+<main class="container page-body">
+  <div class="cart-layout">
+    <div>
+      <div class="section-row">
+        <h2 style="font-size:1.05rem">Item di Keranjang</h2>
+        <a class="btn-ghost btn-sm" href="home.html">+ Tambah Produk</a>
+      </div>
+      <div id="cartItems"></div>
+    </div>
+    <aside class="order-summary">
+      <h2>Ringkasan</h2>
+      <div id="cartSummary"></div>
+      <div class="checkout-section">
+        <div class="form-group">
+          <label class="form-label">Metode Pembayaran</label>
+          <select id="checkoutPayment">
+            <option value="">— Pilih metode —</option>
+            <option value="COD">💵 COD (Bayar di Tempat)</option>
+            <option value="Bank Transfer">🏦 Transfer Bank</option>
+            <option value="E-Wallet">📱 E-Wallet (GoPay/OVO/Dana)</option>
+          </select>
+        </div>
+        <button id="buyNowBtn" class="btn-primary btn-full"><i class="fa-solid fa-circle-check"></i> Konfirmasi Pesanan</button>
+        <div id="checkoutMessage"></div>
+        <a href="home.html" class="btn-ghost btn-full" style="text-align:center;font-size:.82rem">← Lanjut Belanja</a>
+      </div>
+    </aside>
+  </div>
+</main>
+<footer class="footer">© 2026 RHN Preloved</footer>
+
+<script type="module">
+import { requireAuth, renderNav, getUserProfile, getLocalCart, setLocalCart, updateCartBadge, formatRp, toast, auth, db, collection, addDoc, serverTimestamp } from './app.js';
+
+const user    = await requireAuth();
+const profile = await getUserProfile(user.uid);
+renderNav(profile);
+
+renderCart();
+
+function renderCart() {
+  const cart     = getLocalCart();
+  const itemsEl  = document.getElementById('cartItems');
+  const summEl   = document.getElementById('cartSummary');
+  const buyBtn   = document.getElementById('buyNowBtn');
+
+  if (!cart.length) {
+    itemsEl.innerHTML = `<div class="empty-state" style="padding:3rem"><div class="empty-icon">🛒</div><h3>Keranjang Kosong</h3><p style="margin-bottom:1.25rem">Belum ada produk.</p><a class="btn-primary" href="home.html">Jelajahi Produk</a></div>`;
+    summEl.innerHTML  = `<p class="faint" style="text-align:center;padding:.75rem">Tidak ada produk.</p>`;
+    buyBtn.disabled = true; buyBtn.style.opacity = '.4';
+    return;
+  }
+
+  itemsEl.innerHTML = cart.map(item => `
+    <div class="cart-item-card">
+      <img class="cart-thumb" src="${item.images?.[0]||'https://images.unsplash.com/photo-1472851294608-062f824d29cc?w=200&q=60'}" alt="${item.name}"/>
+      <div>
+        <div class="cart-item-name">${item.name}</div>
+        <div class="cart-item-meta">${item.category} · ${item.condition} · ${item.sellerName}</div>
+        <div class="cart-item-price">${formatRp(item.price)}</div>
+      </div>
+      <button class="btn-danger btn-sm" onclick="removeItem('${item.id}')">Hapus</button>
+    </div>`).join('');
+
+  const total = cart.reduce((s,i)=>s+i.price,0);
+  summEl.innerHTML = cart.map(i=>`
+    <div class="summary-line">
+      <span style="max-width:18ch;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${i.name}</span>
+      <span>${formatRp(i.price)}</span>
+    </div>`).join('') +
+    `<div class="summary-line"><span>Biaya Layanan</span><span>Rp 0</span></div>
+     <div class="summary-total"><span>Total</span><span class="price">${formatRp(total)}</span></div>`;
+
+  buyBtn.disabled = false; buyBtn.style.opacity = '1';
+
+  const newBtn = buyBtn.cloneNode(true);
+  buyBtn.parentNode.replaceChild(newBtn, buyBtn);
+  newBtn.addEventListener('click', async () => {
+    const payment = document.getElementById('checkoutPayment').value;
+    const msgEl   = document.getElementById('checkoutMessage');
+    if (!payment) { msgEl.textContent='Pilih metode pembayaran.'; msgEl.className='checkout-message error'; return; }
+    newBtn.disabled = true; newBtn.textContent = '⏳ Memproses…';
+    try {
+      // Re-fetch latest profile to get most up-to-date phone number
+      const freshProfile = await getUserProfile(user.uid);
+      const buyerPhone = freshProfile?.phone || profile?.phone || '';
+      if (!buyerPhone) {
+        const go = confirm('⚠️ Nomor WA kamu belum diisi!\n\nPenjual tidak bisa menghubungimu via WhatsApp.\n\nKlik OK untuk lanjut checkout, atau Batal untuk isi nomor dulu di halaman Profil.');
+        if (!go) { newBtn.disabled=false; newBtn.textContent='✅ Konfirmasi Pesanan'; return; }
+      }
+      const orderItems = cart.map(i=>({
+        id: i.id, name: i.name, price: i.price,
+        sellerId: i.sellerId, sellerName: i.sellerName,
+        sellerPhone: i.phone||i.whatsapp||'',
+        image: i.images?.[0]||''
+      }));
+      // sellerIds at root level so Firestore Rules can check it
+      const sellerIds = [...new Set(orderItems.map(i => i.sellerId).filter(Boolean))];
+
+      await addDoc(collection(db,'orders'), {
+        items: orderItems,
+        sellerIds,
+        total, payment,
+        buyerId: user.uid,
+        buyerName: freshProfile?.name || profile?.name || '',
+        buyerPhone: buyerPhone,
+        buyerUsername: freshProfile?.username || profile?.username || '',
+        status: 'pending',
+        createdAt: serverTimestamp(),
+        reviewed: false
+      });
+      setLocalCart([]);
+      updateCartBadge();
+      msgEl.innerHTML = `✅ Pesanan dikonfirmasi! Hubungi penjual via WhatsApp untuk deal.`;
+      msgEl.className = 'checkout-message success';
+      toast('Pesanan berhasil! Segera chat penjual.','success');
+      setTimeout(renderCart, 200);
+    } catch(e) {
+      newBtn.disabled = false; newBtn.textContent = '✅ Konfirmasi Pesanan';
+      msgEl.textContent = 'Gagal membuat pesanan: ' + e.message;
+      msgEl.className = 'checkout-message error';
+    }
+  });
+}
+
+window.removeItem = function(productId) {
+  setLocalCart(getLocalCart().filter(i=>i.id!==productId));
+  updateCartBadge();
+  renderCart();
+  toast('Produk dihapus.','info');
+};
+</script>
+</body>
+</html>

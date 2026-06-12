@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>RHN Preloved — Login</title>
+  <link rel="stylesheet" href="styles.css"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <style>
+    .login-page{min-height:100vh;display:grid;grid-template-columns:1fr 1fr;background:var(--bg)}
+    .login-left{
+      background:linear-gradient(145deg,#e7f8d5 0%,#c8bfef 40%,#b8d4f8 100%);
+      display:flex;flex-direction:column;justify-content:center;
+      padding:clamp(2rem,6vw,5rem);border-right:1.5px solid var(--border);
+      position:relative;overflow:hidden;
+    }
+    .login-left::before{
+      content:'';position:absolute;top:-80px;right:-80px;
+      width:350px;height:350px;border-radius:50%;
+      background:radial-gradient(circle,rgba(248,171,235,.35) 0%,transparent 70%);
+    }
+    .login-left::after{
+      content:'';position:absolute;bottom:-60px;left:-60px;
+      width:260px;height:260px;border-radius:50%;
+      background:radial-gradient(circle,rgba(162,210,255,.3) 0%,transparent 70%);
+    }
+    .login-left-inner{position:relative;z-index:1;max-width:420px}
+    .brand-lockup{display:flex;align-items:center;gap:.75rem;margin-bottom:0.5rem}
+    .brand-icon{
+      width:42px;height:42px;border-radius:14px;
+      background:linear-gradient(135deg,var(--accent),var(--pink));
+      display:grid;place-items:center;color:#fff;font-size:1.1rem;
+      box-shadow:0 4px 14px rgba(176,111,212,.35);
+    }
+    .brand-name{font-size:1.5rem;font-weight:900;letter-spacing:-.03em;color:var(--ink)}
+    .brand-name span{color:var(--accent)}
+    .left-headline{font-size:clamp(1.9rem,3vw,2.6rem);font-weight:900;line-height:1.15;margin-bottom:1rem;color:var(--ink)}
+    .left-headline em{
+      font-style:normal;
+      background:linear-gradient(135deg,var(--accent));
+      -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+    }
+    .left-sub{font-size:.9rem;color:var(--ink-mid);line-height:1.75;margin-bottom:2rem;max-width:36ch;font-weight:600}
+    .feature-list{display:flex;flex-direction:column;gap:.6rem}
+    .feature-item{display:flex;align-items:center;gap:.75rem;font-size:.85rem;color:var(--ink-mid);font-weight:600}
+    .feature-icon{
+      width:32px;height:32px;border-radius:10px;
+      background:#fff;border:1.5px solid var(--border);
+      display:grid;place-items:center;font-size:.85rem;flex-shrink:0;color:var(--accent);
+      box-shadow:var(--shadow-xs);
+    }
+    .login-right{
+      display:flex;flex-direction:column;justify-content:center;align-items:center;
+      padding:clamp(1.5rem,4vw,3rem);background:var(--bg);
+    }
+    .login-form-wrap{width:100%;max-width:400px}
+    .form-title{font-size:1.6rem;margin-bottom:.3rem;color:var(--ink)}
+    .form-subtitle{font-size:.85rem;color:var(--ink-faint);margin-bottom:1.75rem;font-weight:600}
+
+    .auth-tabs{
+      display:grid;grid-template-columns:1fr 1fr;
+      background:var(--bg-input);border-radius:var(--r-md);
+      border:1.5px solid var(--border);padding:.3rem;gap:.25rem;margin-bottom:1.75rem;
+    }
+    .auth-tab{
+      padding:.62rem;border-radius:var(--r-sm);font-size:.87rem;font-weight:800;
+      color:var(--ink-faint);background:none;border:none;cursor:pointer;
+      transition:all var(--t);font-family:'Nunito',sans-serif;
+    }
+    .auth-tab.active{
+      background:var(--bg-card);color:var(--accent);
+      box-shadow:var(--shadow-sm);
+    }
+
+    .auth-form{display:flex;flex-direction:column;gap:.85rem}
+
+    .ktm-area{
+      border:2px dashed var(--border-hi);border-radius:var(--r-md);
+      padding:1.35rem 1rem;text-align:center;cursor:pointer;
+      transition:all var(--t);background:var(--bg-input);position:relative;overflow:hidden;
+    }
+    .ktm-area:hover{border-color:var(--accent);background:var(--accent-lo)}
+    .ktm-area input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%}
+    .ktm-area i{font-size:1.75rem;color:var(--accent);margin-bottom:.5rem;display:block}
+    .ktm-area p{font-size:.8rem;color:var(--ink-faint);font-weight:600}
+    .ktm-name{font-size:.8rem;color:var(--accent);margin-top:.4rem;font-weight:800}
+
+    .auth-msg{border-radius:var(--r-md);padding:.7rem 1rem;font-size:.84rem;font-weight:700;text-align:center;margin-top:.25rem}
+    .auth-msg.success{background:var(--green-lo);color:#166534;border:1.5px solid rgba(34,197,94,.25)}
+    .auth-msg.error{background:var(--red-lo);color:#9f1239;border:1.5px solid rgba(244,63,94,.2)}
+
+    .divider{text-align:center;color:var(--ink-faint);font-size:.78rem;font-weight:700;position:relative;margin:.25rem 0}
+    .divider::before,.divider::after{content:'';position:absolute;top:50%;width:42%;height:1.5px;background:var(--border)}
+    .divider::before{left:0}.divider::after{right:0}
+
+    @media(max-width:768px){.login-page{grid-template-columns:1fr}.login-left{display:none}.login-right{min-height:100vh}}
+  </style>
+</head>
+<body>
+<div class="login-page">
+
+  <!-- LEFT BRANDING -->
+  <div class="login-left">
+    <div class="login-left-inner">
+      <div class="brand-lockup">
+        <div class="brand-name" style="font-size: 2rem;">RHN <span class="brand-badge" style="color: #f0f0f0; font-size: 1rem;">Preloved</span></div>
+      </div>
+      <h1 class="left-headline">
+        Jual & Beli Barang Bekas<br><em>Mahasiswa Jogja</em>
+      </h1>
+      <p class="left-sub">Platform khusus mahasiswa rantau di Yogyakarta. Habis lulus? Jangan bawa semua barangmu — jual di sini!</p>
+      <div class="feature-list">
+        <div class="feature-item">
+          <div class="feature-icon"><i class="fa-solid fa-graduation-cap"></i></div>
+          <span>Khusus mahasiswa rantau Yogyakarta</span>
+        </div>
+        <div class="feature-item">
+          <div class="feature-icon"><i class="fa-brands fa-whatsapp"></i></div>
+          <span>Deal langsung via WhatsApp</span>
+        </div>
+        <div class="feature-item">
+          <div class="feature-icon"><i class="fa-solid fa-id-card"></i></div>
+          <span>Terverifikasi dengan KTM</span>
+        </div>
+        <div class="feature-item">
+          <div class="feature-icon"><i class="fa-solid fa-star"></i></div>
+          <span>Sistem ulasan & rating</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT FORM -->
+  <div class="login-right">
+    <div class="login-form-wrap">
+      <h2 class="form-title">Selamat Datang!</h2>
+      <p class="form-subtitle">Masuk atau daftar untuk mulai berjualan & berbelanja</p>
+
+      <div class="auth-tabs">
+        <button class="auth-tab active" id="tab-login">
+          <i class="fa-solid fa-right-to-bracket"></i> Masuk
+        </button>
+        <button class="auth-tab" id="tab-register">
+          <i class="fa-solid fa-user-plus"></i> Daftar
+        </button>
+      </div>
+
+      <!-- LOGIN -->
+      <div id="panel-login" class="auth-form">
+        <div class="form-group">
+          <label class="form-label"><i class="fa-solid fa-envelope"></i> Email</label>
+          <input type="email" id="login-email" placeholder="nama@email.com"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label"><i class="fa-solid fa-lock"></i> Password</label>
+          <input type="password" id="login-password" placeholder="••••••••"/>
+        </div>
+        <button class="btn-primary btn-full btn-lg" id="btn-login">
+          <i class="fa-solid fa-right-to-bracket"></i> Masuk
+        </button>
+        <p style="text-align:center;font-size:.82rem;color:var(--ink-faint);font-weight:600">
+          Belum punya akun?
+          <button type="button" id="go-reg" style="background:none;border:none;color:var(--accent);font-weight:800;cursor:pointer;font-family:inherit;font-size:.82rem">
+            Daftar sekarang
+          </button>
+        </p>
+      </div>
+
+      <!-- REGISTER -->
+      <div id="panel-register" class="auth-form" style="display:none">
+        <div class="form-group">
+          <label class="form-label"><i class="fa-solid fa-user"></i> Nama Lengkap</label>
+          <input type="text" id="reg-name" placeholder="Nama sesuai KTM"/>
+        </div>
+        <div class="form-row" style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem">
+          <div class="form-group">
+            <label class="form-label"><i class="fa-solid fa-at"></i> Username</label>
+            <input type="text" id="reg-username" placeholder="username"/>
+          </div>
+          <div class="form-group">
+            <label class="form-label"><i class="fa-brands fa-whatsapp"></i> No. WhatsApp</label>
+            <input type="tel" id="reg-phone" placeholder="08xxxxxxxxxx"/>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label"><i class="fa-solid fa-envelope"></i> Email</label>
+          <input type="email" id="reg-email" placeholder="nama@email.com"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label"><i class="fa-solid fa-lock"></i> Password</label>
+          <input type="password" id="reg-password" placeholder="Min. 6 karakter"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label"><i class="fa-solid fa-id-card"></i> Upload KTM *</label>
+          <div class="ktm-area">
+            <input type="file" id="reg-ktm" accept="image/*"/>
+            <i class="fa-solid fa-id-card"></i>
+            <p>Klik untuk upload foto KTM</p>
+            <p>JPG / PNG</p>
+            <div class="ktm-name" id="ktm-name"></div>
+          </div>
+        </div>
+        <button class="btn-primary btn-full btn-lg" id="btn-register">
+          <i class="fa-solid fa-user-plus"></i> Buat Akun
+        </button>
+        <p style="text-align:center;font-size:.82rem;color:var(--ink-faint);font-weight:600">
+          Sudah punya akun?
+          <button type="button" id="go-login" style="background:none;border:none;color:var(--accent);font-weight:800;cursor:pointer;font-family:inherit;font-size:.82rem">
+            Masuk
+          </button>
+        </p>
+      </div>
+
+      <div id="auth-msg"></div>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import {
+  auth, db,
+  createUserWithEmailAndPassword, signInWithEmailAndPassword,
+  onAuthStateChanged, updateProfile,
+  doc, setDoc, serverTimestamp,
+  compressImage
+} from './app.js';
+
+let isRegistering = false;
+
+onAuthStateChanged(auth, u => {
+  if (u && !isRegistering) window.location.href = 'home.html';
+});
+
+// Tab switch
+const tabLogin = document.getElementById('tab-login');
+const tabReg   = document.getElementById('tab-register');
+const panLogin = document.getElementById('panel-login');
+const panReg   = document.getElementById('panel-register');
+
+function showLogin() { tabLogin.classList.add('active'); tabReg.classList.remove('active'); panLogin.style.display='flex'; panReg.style.display='none'; }
+function showReg()   { tabReg.classList.add('active'); tabLogin.classList.remove('active'); panReg.style.display='flex'; panLogin.style.display='none'; }
+
+tabLogin.addEventListener('click', showLogin);
+tabReg.addEventListener('click', showReg);
+document.getElementById('go-reg').addEventListener('click', showReg);
+document.getElementById('go-login').addEventListener('click', showLogin);
+
+document.getElementById('reg-ktm').addEventListener('change', function() {
+  document.getElementById('ktm-name').textContent = this.files[0]?.name || '';
+});
+
+function showMsg(msg, type) {
+  const el = document.getElementById('auth-msg');
+  el.className = `auth-msg ${type}`; el.textContent = msg;
+}
+
+// ── LOGIN ──────────────────────────────────────────────
+document.getElementById('btn-login').addEventListener('click', async () => {
+  const email    = document.getElementById('login-email').value.trim();
+  const password = document.getElementById('login-password').value;
+  const btn      = document.getElementById('btn-login');
+  if (!email || !password) { showMsg('Isi email dan password.', 'error'); return; }
+  btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Masuk…';
+  try {
+    await signInWithEmailAndPassword(auth, email, password);
+    showMsg('✓ Berhasil! Mengalihkan…', 'success');
+    setTimeout(() => window.location.href = 'home.html', 700);
+  } catch(e) {
+    btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-right-to-bracket"></i> Masuk';
+    const map = {
+      'auth/user-not-found':'Email tidak terdaftar.',
+      'auth/wrong-password':'Password salah.',
+      'auth/invalid-credential':'Email atau password salah.',
+      'auth/too-many-requests':'Terlalu banyak percobaan. Coba lagi nanti.'
+    };
+    showMsg(map[e.code] || 'Login gagal: ' + e.message, 'error');
+  }
+});
+
+// ── REGISTER ────────────────────────────────────────────
+document.getElementById('btn-register').addEventListener('click', async () => {
+  const name     = document.getElementById('reg-name').value.trim();
+  const username = document.getElementById('reg-username').value.trim().replace(/^@/,'').toLowerCase();
+  const email    = document.getElementById('reg-email').value.trim();
+  const phone    = document.getElementById('reg-phone').value.trim();
+  const password = document.getElementById('reg-password').value;
+  const ktmFile  = document.getElementById('reg-ktm').files[0];
+  const btn      = document.getElementById('btn-register');
+
+  if (!name || !username || !email || !phone || !password) { showMsg('Isi semua kolom yang wajib.', 'error'); return; }
+  if (password.length < 6) { showMsg('Password minimal 6 karakter.', 'error'); return; }
+  if (!ktmFile) { showMsg('Upload foto KTM terlebih dahulu.', 'error'); return; }
+
+  isRegistering = true;
+  btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Mendaftar…';
+
+  try {
+    // Compress KTM & store in localStorage only (too big for Firestore)
+    let ktmBase64 = '';
+    try { ktmBase64 = await compressImage(ktmFile, 600, 0.65); } catch {}
+
+    const cred = await createUserWithEmailAndPassword(auth, email, password);
+    await updateProfile(cred.user, { displayName: name });
+
+    // Save profile with phone to Firestore
+    await setDoc(doc(db, 'users', cred.user.uid), {
+      name, username, email, phone,
+      createdAt: serverTimestamp(),
+      role: 'user'
+    });
+
+    // KTM only in localStorage
+    if (ktmBase64) {
+      try { localStorage.setItem('rhn_ktm_' + cred.user.uid, ktmBase64); } catch {}
+    }
+
+    showMsg(`✓ Akun berhasil dibuat. Selamat datang, ${name}!`, 'success');
+    setTimeout(() => window.location.href = 'home.html', 1200);
+  } catch(e) {
+    isRegistering = false;
+    btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-user-plus"></i> Buat Akun';
+    const map = {
+      'auth/email-already-in-use':'Email sudah terdaftar.',
+      'auth/weak-password':'Password terlalu lemah (min. 6 karakter).'
+    };
+    showMsg(map[e.code] || 'Gagal daftar: ' + e.message, 'error');
+  }
+});
+</script>
+</body>
+</html>

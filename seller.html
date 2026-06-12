@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Dashboard Penjual | RHN Preloved</title>
+  <link rel="stylesheet" href="styles.css"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+</head>
+<body>
+<div id="nav-root"></div>
+<div class="page-hero">
+  <div class="container">
+    <div class="page-hero-inner">
+      <div><p class="eyebrow">Dashboard Penjual</p><h1>Kelola Produk Anda</h1>
+        <p>Upload dan kelola semua listing barang preloved milik Anda.</p></div>
+      <div class="chip-row" id="role-chip"></div>
+    </div>
+  </div>
+</div>
+
+<main class="container page-body">
+  <div class="dash-stats" id="dashStats">
+    <div class="stat-card"><div style="font-size:1.4rem">⏳</div><div class="stat-label">Memuat…</div></div>
+  </div>
+  <div class="card">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem;flex-wrap:wrap;gap:.75rem">
+      <div><h2 style="font-size:1.05rem;margin-bottom:.2rem">Listing Produk Saya</h2>
+        <p class="faint">Semua produk yang Anda jual</p></div>
+      <button class="btn-primary" id="openAddModal"><i class="fa-solid fa-plus"></i> Upload Produk Baru</button>
+    </div>
+    <div id="sellerListings"><div style="text-align:center;padding:2rem"><p class="muted">⏳ Memuat…</p></div></div>
+  </div>
+</main>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="productModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="modalTitle">Upload Produk Baru</h2>
+      <button class="modal-close" id="closeModal">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="fee-notice">
+        <strong>💰 Biaya Upload Produk: Rp 5.000</strong>
+        Fee platform Rp 5.000. Jika dibatalkan, fee dikembalikan 50% (Rp 2.500).
+      </div>
+      <div class="form-section">
+        <div class="form-section-title">📸 Foto Produk</div>
+        <div class="form-group">
+          <label class="form-label">Upload Gambar (maks. 4 foto)</label>
+          <input type="file" id="productImages" accept="image/*" multiple/>
+          <span class="form-hint">Foto dikompres otomatis.</span>
+        </div>
+        <div class="preview-grid" id="previewBox"></div>
+      </div>
+      <div class="form-section">
+        <div class="form-section-title">📦 Informasi Produk</div>
+        <div class="form-group"><label class="form-label">Nama Produk *</label>
+          <input type="text" id="prod-name" placeholder="contoh: Jaket Denim Uniqlo"/></div>
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">Kategori *</label>
+            <select id="prod-category">
+              <option value="">Pilih kategori</option>
+              <option>Pakaian & Fashion</option><option>Buku & Alat Tulis</option>
+              <option>Elektronik</option><option>Furnitur & Dekorasi</option>
+              <option>Olahraga & Outdoor</option><option>Dapur & Peralatan</option><option>Lainnya</option>
+            </select></div>
+          <div class="form-group"><label class="form-label">Kondisi *</label>
+            <select id="prod-condition">
+              <option value="">Pilih kondisi</option>
+              <option>Sangat Baik</option><option>Baik</option><option>Layak Pakai</option>
+            </select></div>
+        </div>
+        <div class="form-group"><label class="form-label">Deskripsi *</label>
+          <textarea id="prod-description" rows="3" placeholder="Detail kondisi dan riwayat produk…"></textarea></div>
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">Kelebihan</label>
+            <textarea id="prod-advantages" rows="2" placeholder="contoh: Masih bagus, ringan"></textarea></div>
+          <div class="form-group"><label class="form-label">Kekurangan / Cacat</label>
+            <textarea id="prod-disadvantages" rows="2" placeholder="contoh: Ada lecet kecil"></textarea></div>
+        </div>
+        <div class="form-group"><label class="form-label">Lokasi COD *</label>
+          <input type="text" id="prod-location" placeholder="contoh: Jl. Sonosewu km1, Bantul"/></div>
+      </div>
+      <div class="form-section">
+        <div class="form-section-title">💰 Harga & Pembayaran</div>
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">Harga Jual (Rp) *</label>
+            <input type="number" id="prod-price" min="0" placeholder="150000"/></div>
+          <div class="form-group" style="justify-content:flex-end">
+            <label class="checkbox-row" style="margin-top:1.6rem">
+              <input type="checkbox" id="prod-negotiable"/> Bisa negosiasi</label></div>
+        </div>
+        <div class="form-group"><label class="form-label">Metode Pembayaran *</label>
+          <div style="display:flex;flex-direction:column;gap:.25rem">
+            <label class="checkbox-row"><input type="checkbox" class="pay-method" value="COD"/> 💵 COD</label>
+            <label class="checkbox-row"><input type="checkbox" class="pay-method" value="Bank Transfer"/> 🏦 Transfer Bank</label>
+            <label class="checkbox-row"><input type="checkbox" class="pay-method" value="E-Wallet"/> 📱 E-Wallet</label>
+          </div></div>
+      </div>
+      <div class="form-section">
+        <div class="form-section-title">🧾 Bukti Pembayaran Fee Rp 5.000</div>
+        <div class="form-group"><label class="form-label">Upload Bukti Transfer *</label>
+          <div style="position:relative;border:2px dashed var(--border-hi);border-radius:var(--r-md);padding:1.25rem 1rem;text-align:center;cursor:pointer;background:var(--bg-input)">
+            <input type="file" id="prod-fee-proof" accept="image/*"
+              style="position:absolute;inset:0;opacity:0;cursor:pointer;width:100%"/>
+            <div style="font-size:1.5rem;margin-bottom:.4rem">📄</div>
+            <p style="font-size:.82rem;color:var(--ink-faint)">Klik untuk upload bukti transfer</p>
+            <div id="fee-filename" style="font-size:.8rem;color:var(--accent);margin-top:.4rem;font-weight:600"></div>
+          </div>
+          <span class="form-hint">Transfer ke: BCA 1234567890 a.n. RHN Preloved</span></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-ghost" id="cancelModal"><i class="fa-solid fa-xmark"></i> Batal</button>
+      <button class="btn-primary" id="saveProduct"><i class="fa-solid fa-floppy-disk"></i> Simpan Listing</button>
+    </div>
+  </div>
+</div>
+
+<footer class="footer">© 2026 RHN Preloved</footer>
+
+<script type="module">
+import {
+  requireAuth, renderNav, getUserProfile, formatRp, toast, waNumber, compressImage,
+  auth, db,
+  collection, doc, addDoc, updateDoc, deleteDoc,
+  query, where, onSnapshot, serverTimestamp
+} from './app.js';
+
+const user    = await requireAuth();
+const profile = await getUserProfile(user.uid);
+renderNav(profile);
+
+let editId     = null;
+let myProducts = [];
+let allOrders  = [];
+
+// Listen to MY products — simple single-field where, no index needed
+onSnapshot(
+  query(collection(db,'products'), where('sellerId','==',user.uid)),
+  snap => {
+    myProducts = snap.docs
+      .map(d => ({ id: d.id, ...d.data() }))
+      .sort((a,b) => (b.createdAt?.toDate?.()?.getTime()||0) - (a.createdAt?.toDate?.()?.getTime()||0));
+    renderStats();
+    renderListings();
+  },
+  err => toast('Error memuat produk: ' + err.message, 'error')
+);
+
+// Listen to ALL pending/accepted orders — filter by myIds inside renderListings
+// This avoids timing issue where myProducts is empty when listener first fires
+onSnapshot(
+  query(collection(db,'orders'), where('status','in',['pending','accepted'])),
+  snap => {
+    allOrders = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    renderStats();
+    renderListings();
+  },
+  err => console.warn('Orders listener:', err.message)
+);
+
+// Image preview
+document.getElementById('productImages').addEventListener('change', async function() {
+  const box = document.getElementById('previewBox');
+  box.innerHTML = '<p class="faint" style="font-size:.78rem">Mengompres foto…</p>';
+  const files = [...this.files].slice(0,4);
+  const imgs  = await Promise.all(files.map(f => compressImage(f)));
+  box.innerHTML = imgs.map(src=>`<img src="${src}"/>`).join('');
+});
+
+document.getElementById('prod-fee-proof').addEventListener('change', function() {
+  document.getElementById('fee-filename').textContent = this.files[0]?.name || '';
+});
+
+// Modal
+const openModal  = () => { document.getElementById('productModal').classList.add('open'); document.body.classList.add('no-scroll'); };
+const closeModal = () => { document.getElementById('productModal').classList.remove('open'); document.body.classList.remove('no-scroll'); };
+
+document.getElementById('openAddModal').addEventListener('click', () => { editId=null; resetForm(); openModal(); });
+document.getElementById('closeModal').addEventListener('click', closeModal);
+document.getElementById('cancelModal').addEventListener('click', closeModal);
+document.getElementById('productModal').addEventListener('click', e => { if(e.target.id==='productModal') closeModal(); });
+
+function resetForm() {
+  document.getElementById('modalTitle').textContent = 'Upload Produk Baru';
+  ['prod-name','prod-description','prod-advantages','prod-disadvantages','prod-location','prod-price']
+    .forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
+  document.getElementById('prod-category').value = '';
+  document.getElementById('prod-condition').value = '';
+  document.getElementById('prod-negotiable').checked = false;
+  document.querySelectorAll('.pay-method').forEach(i => i.checked=false);
+  document.getElementById('previewBox').innerHTML = '';
+  document.getElementById('fee-filename').textContent = '';
+  document.getElementById('productImages').value = '';
+}
+
+// Save product
+document.getElementById('saveProduct').addEventListener('click', async () => {
+  const name    = document.getElementById('prod-name').value.trim();
+  const cat     = document.getElementById('prod-category').value;
+  const cond    = document.getElementById('prod-condition').value;
+  const desc    = document.getElementById('prod-description').value.trim();
+  const loc     = document.getElementById('prod-location').value.trim();
+  const price   = Number(document.getElementById('prod-price').value);
+  const nego    = document.getElementById('prod-negotiable').checked;
+  const adv     = document.getElementById('prod-advantages').value.trim();
+  const dis     = document.getElementById('prod-disadvantages').value.trim();
+  const methods = [...document.querySelectorAll('.pay-method:checked')].map(i=>i.value);
+  const feeFile = document.getElementById('prod-fee-proof').files[0];
+  const imgFiles= [...document.getElementById('productImages').files].slice(0,4);
+
+  if (!name||!cat||!cond||!desc||!loc||!price) { toast('Lengkapi semua kolom wajib.','error'); return; }
+  if (!methods.length) { toast('Pilih minimal 1 metode pembayaran.','error'); return; }
+  if (!feeFile && !editId) { toast('Upload bukti pembayaran fee.','error'); return; }
+
+  const btn = document.getElementById('saveProduct');
+  btn.disabled = true; btn.textContent = '⏳ Menyimpan…';
+
+  try {
+    let images = [];
+    if (imgFiles.length) {
+      images = await Promise.all(imgFiles.map(f => compressImage(f)));
+    } else if (editId) {
+      images = myProducts.find(p=>p.id===editId)?.images || [];
+    }
+
+    const data = {
+      name, category:cat, condition:cond, description:desc,
+      advantages:adv, disadvantages:dis, location:loc,
+      price, negotiable:nego, paymentMethods:methods,
+      sellerId:     user.uid,
+      sellerName:   profile.name,
+      sellerUsername:profile.username,
+      phone:        profile.phone,
+      whatsapp:     profile.phone,
+      images,
+      active:true, sold:false
+    };
+
+    if (editId) {
+      await updateDoc(doc(db,'products',editId), data);
+      toast('✓ Listing diperbarui.','success');
+    } else {
+      data.createdAt = serverTimestamp();
+      await addDoc(collection(db,'products'), data);
+      toast('✓ Produk berhasil diupload!','success');
+    }
+    closeModal(); editId = null;
+  } catch(e) {
+    toast('Gagal menyimpan: ' + e.message, 'error');
+  } finally {
+    btn.disabled=false; btn.textContent='💾 Simpan Listing';
+  }
+});
+
+function renderStats() {
+  const el = document.getElementById('dashStats');
+  if (!el) return;
+  const myIds   = myProducts.map(p=>p.id);
+  const pending = allOrders.filter(o=>o.status==='pending' && o.items?.some(i=>myIds.includes(i.id))).length;
+  const sold    = myProducts.filter(p=>p.sold).length;
+  const active  = myProducts.filter(p=>!p.sold&&p.active).length;
+
+  el.innerHTML = [
+    { value:myProducts.length, label:'Total Listing', icon:'📦' },
+    { value:active,            label:'Aktif',          icon:'🟢' },
+    { value:sold,              label:'Terjual',        icon:'✅' },
+    { value:pending,           label:'Pesanan Masuk',  icon:'🔔', hi:pending>0 },
+  ].map(s=>`
+    <div class="stat-card" ${s.hi?'style="border-color:var(--yellow);background:var(--yellow-lo)"':''}>
+      <div style="font-size:1.4rem;margin-bottom:.35rem">${s.icon}</div>
+      <div class="stat-value" ${s.hi?'style="color:var(--yellow)"':''}>${s.value}</div>
+      <div class="stat-label">${s.label}</div>
+    </div>`).join('');
+}
+
+function renderListings() {
+  const el = document.getElementById('sellerListings');
+  if (!myProducts.length) {
+    el.innerHTML = `<div class="empty-state" style="padding:2.5rem"><div class="empty-icon">📦</div><h3>Belum ada listing</h3><p>Klik "Upload Produk Baru" untuk mulai berjualan.</p></div>`;
+    return;
+  }
+  const myIds = myProducts.map(p=>p.id);
+
+  el.innerHTML = myProducts.map(p => {
+    const pending  = allOrders.filter(o=>o.status==='pending'  && o.items?.some(i=>i.id===p.id));
+    const accepted = allOrders.filter(o=>o.status==='accepted' && o.items?.some(i=>i.id===p.id));
+    const pendBadge = pending.length
+      ? `<span class="badge" style="background:var(--yellow-lo);color:var(--yellow);border:1px solid rgba(234,179,8,.25);animation:pulse 1.5s infinite">🔔 ${pending.length} pesanan masuk</span>` : '';
+
+    const pendHtml = pending.length ? `
+      <div class="incoming-orders">
+        <div class="incoming-title">📬 Pesanan Masuk</div>
+        ${pending.map(o => {
+          const waLink = `https://wa.me/${waNumber(o.buyerPhone||'')}?text=${encodeURIComponent('Halo '+o.buyerName+', pesananmu untuk "'+p.name+'" sudah saya terima! Kapan bisa COD?')}`;
+          return `
+            <div class="order-row-seller">
+              <div class="order-row-info">
+                <div class="order-row-buyer">
+                  <span class="buyer-avatar">${(o.buyerName||'?').charAt(0).toUpperCase()}</span>
+                  <div>
+                    <div style="font-weight:600;font-size:.85rem">${o.buyerName}</div>
+                    <div style="font-size:.75rem;color:var(--ink-faint)">@${o.buyerUsername||'-'} · 📱 ${o.buyerPhone||'-'}</div>
+                  </div>
+                </div>
+                <div style="font-size:.8rem;color:var(--ink-mid)">💳 ${o.payment} · <span class="price-text" style="font-size:.8rem">${formatRp(o.total)}</span></div>
+              </div>
+              <div style="display:flex;gap:.4rem;flex-wrap:wrap">
+                <a href="${waLink}" target="_blank" class="btn-outline btn-sm">💬 WA Pembeli</a>
+                <button class="btn-primary btn-sm" onclick="acceptOrder('${o.id}')">✅ Terima</button>
+                <button class="btn-danger btn-sm"  onclick="rejectOrder('${o.id}')">✕ Tolak</button>
+              </div>
+            </div>`;
+        }).join('')}
+      </div>` : '';
+
+    const accHtml = accepted.length ? `
+      <div class="incoming-orders" style="border-color:rgba(34,197,94,.2);background:var(--green-lo)">
+        <div class="incoming-title" style="color:var(--green)">✅ Diterima — Tunggu Konfirmasi Pembeli</div>
+        ${accepted.map(o => {
+          const waLink = `https://wa.me/${waNumber(o.buyerPhone||'')}?text=${encodeURIComponent('Halo '+o.buyerName+', kapan bisa COD untuk "'+p.name+'"?')}`;
+          return `
+            <div class="order-row-seller" style="border-color:rgba(34,197,94,.15)">
+              <div class="order-row-info">
+                <div class="order-row-buyer">
+                  <span class="buyer-avatar" style="background:var(--green)">${(o.buyerName||'?').charAt(0).toUpperCase()}</span>
+                  <div>
+                    <div style="font-weight:600;font-size:.85rem">${o.buyerName}</div>
+                    <div style="font-size:.75rem;color:var(--ink-faint)">📱 ${o.buyerPhone||'-'}</div>
+                  </div>
+                </div>
+              </div>
+              <a href="${waLink}" target="_blank" class="btn-outline btn-sm"
+                style="border-color:var(--green);color:var(--green)">💬 Chat Pembeli</a>
+            </div>`;
+        }).join('')}
+      </div>` : '';
+
+    return `
+      <div class="listing-item">
+        <div class="listing-main">
+          <img class="listing-thumb"
+            src="${p.images?.[0]||'https://images.unsplash.com/photo-1472851294608-062f824d29cc?w=100'}"
+            alt="${p.name}"/>
+          <div class="listing-info">
+            <div style="display:flex;align-items:flex-start;gap:.5rem;flex-wrap:wrap">
+              <div style="font-weight:700;font-size:.95rem;flex:1">${p.name}</div>${pendBadge}
+            </div>
+            <div style="display:flex;gap:.4rem;flex-wrap:wrap;align-items:center;margin-top:.35rem">
+              <span class="price-text" style="font-size:.95rem">${formatRp(p.price)}</span>
+              <span class="badge badge-cond" style="font-size:.65rem">${p.condition}</span>
+              <span class="faint" style="font-size:.75rem">${p.category}</span>
+            </div>
+            <div style="font-size:.75rem;color:var(--ink-faint);margin-top:.2rem">📍 ${p.location||'Yogyakarta'}</div>
+          </div>
+          <div class="listing-status-col">
+            ${p.sold
+              ? `<span class="badge" style="background:var(--red-lo);color:var(--red)">Terjual</span>`
+              : `<span class="badge" style="background:var(--green-lo);color:var(--green)">Aktif</span>`}
+            <div style="display:flex;gap:.35rem;margin-top:.5rem;flex-wrap:wrap">
+              <button class="btn-ghost btn-sm" onclick="editListing('${p.id}')">Edit</button>
+              ${!p.sold?`<button class="btn-outline btn-sm" onclick="markSold('${p.id}')">Terjual</button>`:''}
+              <button class="btn-danger btn-sm" onclick="deleteListing('${p.id}')">Hapus</button>
+            </div>
+          </div>
+        </div>
+        ${pendHtml}${accHtml}
+      </div>`;
+  }).join('');
+}
+
+window.acceptOrder = async id => {
+  try { await updateDoc(doc(db,'orders',id), { status:'accepted' }); toast('✅ Pesanan diterima!','success'); }
+  catch(e) { toast('Gagal: '+e.message,'error'); }
+};
+window.rejectOrder = async id => {
+  if (!confirm('Tolak pesanan ini?')) return;
+  try { await updateDoc(doc(db,'orders',id), { status:'rejected' }); toast('Pesanan ditolak.','info'); }
+  catch(e) { toast('Gagal: '+e.message,'error'); }
+};
+window.editListing = id => {
+  const p = myProducts.find(x=>x.id===id); if (!p) return;
+  editId = id;
+  document.getElementById('modalTitle').textContent = 'Edit Listing Produk';
+  const s = (i,v) => { const el=document.getElementById(i); if(el) el.value=v; };
+  s('prod-name',p.name); s('prod-category',p.category); s('prod-condition',p.condition);
+  s('prod-description',p.description); s('prod-advantages',p.advantages||'');
+  s('prod-disadvantages',p.disadvantages||''); s('prod-location',p.location||''); s('prod-price',p.price);
+  document.getElementById('prod-negotiable').checked = p.negotiable;
+  document.querySelectorAll('.pay-method').forEach(i => i.checked=(p.paymentMethods||[]).includes(i.value));
+  document.getElementById('previewBox').innerHTML = (p.images||[]).map(src=>`<img src="${src}"/>`).join('');
+  openModal();
+};
+window.markSold = async id => {
+  if (!confirm('Tandai produk ini sebagai terjual?')) return;
+  try { await updateDoc(doc(db,'products',id),{sold:true}); toast('✓ Ditandai terjual.','success'); }
+  catch(e) { toast('Gagal: '+e.message,'error'); }
+};
+window.deleteListing = async id => {
+  const p = myProducts.find(x=>x.id===id);
+  if (!confirm(`Hapus "${p?.name}"?\nFee dikembalikan 50%.`)) return;
+  try { await deleteDoc(doc(db,'products',id)); toast('Listing dihapus.','info'); }
+  catch(e) { toast('Gagal: '+e.message,'error'); }
+};
+</script>
+</body>
+</html>
