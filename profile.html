@@ -318,7 +318,7 @@ async function loadOrders() {
           ${(o.items||[]).map(item => {
               // sellerPhone from order item, or fallback from sellerPhoneCache
               const sellerPhone = item.sellerPhone || sellerPhoneCache[item.sellerId] || '';
-              const waText = encodeURIComponent('Halo, saya sudah checkout produk "'+item.name+'". Kapan bisa COD?');
+              const waText = encodeURIComponent('Hallo, saya sudah checkout produk "'+item.name+'". Kapan bisa COD?');
               return sellerPhone
                 ? `<a href="https://wa.me/${waNumber(sellerPhone)}?text=${waText}" target="_blank" class="btn-outline btn-sm">💬 WA: ${item.sellerName}</a>`
                 : `<a href="home.html" class="btn-outline btn-sm" style="opacity:.6">💬 ${item.sellerName} (hubungi via profil)</a>`;

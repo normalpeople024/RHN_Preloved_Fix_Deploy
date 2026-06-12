@@ -94,7 +94,6 @@
         </div>
         <div class="form-group"><label class="form-label">Metode Pembayaran *</label>
           <div style="display:flex;flex-direction:column;gap:.25rem">
-            <label class="checkbox-row"><input type="checkbox" class="pay-method" value="COD"/> 💵 COD</label>
             <label class="checkbox-row"><input type="checkbox" class="pay-method" value="Bank Transfer"/> 🏦 Transfer Bank</label>
             <label class="checkbox-row"><input type="checkbox" class="pay-method" value="E-Wallet"/> 📱 E-Wallet</label>
           </div></div>
@@ -295,7 +294,7 @@ function renderListings() {
       <div class="incoming-orders">
         <div class="incoming-title">📬 Pesanan Masuk</div>
         ${pending.map(o => {
-          const waLink = `https://wa.me/${waNumber(o.buyerPhone||'')}?text=${encodeURIComponent('Halo '+o.buyerName+', pesananmu untuk "'+p.name+'" sudah saya terima! Kapan bisa COD?')}`;
+          const waLink = `https://wa.me/${waNumber(o.buyerPhone||'')}?text=${encodeURIComponent('Hallo '+o.buyerName+', apakah benar anda telah memesan produk"'+p.name+'"? Mohon konfrimasinya. Terima Kasih')}`;
           return `
             <div class="order-row-seller">
               <div class="order-row-info">
@@ -321,7 +320,7 @@ function renderListings() {
       <div class="incoming-orders" style="border-color:rgba(34,197,94,.2);background:var(--green-lo)">
         <div class="incoming-title" style="color:var(--green)">✅ Diterima — Tunggu Konfirmasi Pembeli</div>
         ${accepted.map(o => {
-          const waLink = `https://wa.me/${waNumber(o.buyerPhone||'')}?text=${encodeURIComponent('Halo '+o.buyerName+', kapan bisa COD untuk "'+p.name+'"?')}`;
+          const waLink = `https://wa.me/${waNumber(o.buyerPhone||'')}?text=${encodeURIComponent('Hallo '+o.buyerName+', kapan bisa COD untuk "'+p.name+'"?')}`;
           return `
             <div class="order-row-seller" style="border-color:rgba(34,197,94,.15)">
               <div class="order-row-info">
