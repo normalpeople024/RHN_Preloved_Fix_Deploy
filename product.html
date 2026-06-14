@@ -81,11 +81,6 @@ async function loadProduct() {
             </div>
           </div>`:''}
 
-        <div class="detail-section">
-          <h4>Metode Pembayaran</h4>
-          <div class="payment-chips">${(p.paymentMethods||[]).map(m=>`<span class="payment-chip">${m}</span>`).join('')}</div>
-        </div>
-
         ${p.location?`<div class="detail-section"><h4>Lokasi COD</h4><p style="font-size:.88rem;color:var(--ink-mid)">📍 ${p.location}</p></div>`:''}
 
         <div class="detail-section">
